@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b0e14">
+  <title>Sähkövahti — Suomen sähkön hinta</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <div class="brand"><span class="bolt">⚡</span> Sähkövahti</div>
+        <div class="muted">Suomen spot-sähkön hintaseuranta</div>
+      </div>
+      <button id="refreshBtn" class="icon-btn" title="Päivitä">↻ <span>Päivitä</span></button>
+    </header>
+
+    <main>
+      <section class="hero-grid">
+        <article class="card current-card">
+          <div class="eyebrow">NYT</div>
+          <div id="currentPrice" class="big-price">—</div>
+          <div id="currentMeta" class="muted">Haetaan hintaa…</div>
+          <div class="status-row">
+            <span id="priceBadge" class="badge">—</span>
+            <span id="updatedAt" class="muted">—</span>
+          </div>
+        </article>
+
+        <article class="card stat">
+          <span class="label">Päivän halvin</span>
+          <strong id="minPrice">—</strong>
+          <span id="minTime" class="muted">—</span>
+        </article>
+        <article class="card stat">
+          <span class="label">Päivän kallein</span>
+          <strong id="maxPrice">—</strong>
+          <span id="maxTime" class="muted">—</span>
+        </article>
+        <article class="card stat">
+          <span class="label">Päivän keskihinta</span>
+          <strong id="avgPrice">—</strong>
+          <span class="muted">sis. ALV</span>
+        </article>
+      </section>
+
+      <section class="card chart-card">
+        <div class="section-head">
+          <div>
+            <h2>Hintakäyrä</h2>
+            <p id="chartSubtitle" class="muted">Tänään</p>
+          </div>
+          <div class="tabs">
+            <button class="tab active" data-day="today">Tänään</button>
+            <button class="tab" data-day="tomorrow">Huomenna</button>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <svg id="chart" viewBox="0 0 1000 360" preserveAspectRatio="none" aria-label="Sähkön hinnan kuvaaja"></svg>
+          <div id="chartTooltip" class="tooltip hidden"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-head">
+          <div>
+            <h2>Tuntihinnat</h2>
+            <p class="muted">Hinta sisältää ALV:n. Data päivittyy rajapinnan mukaan.</p>
+          </div>
+          <div class="legend">
+            <span><i class="cheap"></i> Halpa</span>
+            <span><i class="normal"></i> Normaali</span>
+            <span><i class="expensive"></i> Kallis</span>
+          </div>
+        </div>
+        <div id="priceGrid" class="price-grid"></div>
+      </section>
+
+      <section class="bottom-grid">
+        <article class="card calculator">
+          <div class="section-head">
+            <div>
+              <h2>Kulutuslaskuri</h2>
+              <p class="muted">Arvioi yhden tunnin energiakustannus.</p>
+            </div>
+          </div>
+          <label>
+            Kulutus
+            <div class="input-wrap"><input id="consumption" type="number" min="0" step="0.01" value="1"><span>kWh</span></div>
+          </label>
+          <label>
+            Sähkönmyyjän marginaali
+            <div class="input-wrap"><input id="margin" type="number" min="0" step="0.01" value="0.40"><span>snt/kWh</span></div>
+          </label>
+          <div class="calc-result">
+            <span>Arvio nykyhinnalla</span>
+            <strong id="calcResult">—</strong>
+          </div>
+        </article>
+
+        <article class="card info">
+          <h2>Huomio</h2>
+          <p>Spot-hinta on markkinahinta. Lopulliseen sähkölaskuun voi tulla lisäksi esimerkiksi myyjän marginaali, perusmaksu ja sähkönsiirron kustannukset.</p>
+          <p class="muted">Tämä demo käyttää Sähköttimen avointa rajapintaa hintadatan hakemiseen. Rajapinnan käyttöehdot kannattaa tarkistaa ennen kaupallista tuotantoa.</p>
+        </article>
+      </section>
+    </main>
+
+    <footer>
+      <span>⚡ Sähkövahti</span>
+      <span>Hintayksikkö: snt/kWh · ALV mukana</span>
+    </footer>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
