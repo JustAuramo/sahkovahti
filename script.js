@@ -1,12 +1,63 @@
-const API = "https://sahkotin.fi/prices?vat&fix";
+const Config = {
+  api: {
+    baseUrl: "https://www.sahkonhintatanaan.fi/api/v1/prices",
+  },
+
+  refresh: {
+    enabled: true,
+    interval: 5 * 60 * 1000,
+  },
+
+  display: {
+    locale: "fi-FI",
+    currency: "EUR",
+    unit: "snt/kWh",
+    minDecimals: 2,
+    maxDecimals: 3,
+  },
+
+  price: {
+    cheapPercentile: 0.25,
+    expensivePercentile: 0.75,
+  },
+
+  cookies: {
+    enabled: true,
+    storageKey: "sahkovahti_cookie_consent",
+  },
+
+  debug: true, // Set to true to always show the cookie consent popup for testing
+};
 const state = { today: [], tomorrow: [], activeDay: "today", lastUpdate: null };
 
 const $ = (id) => document.getElementById(id);
-const fmt = (n) =>
-  Number(n).toLocaleString("fi-FI", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 3,
-  }) + " snt/kWh";
+function fmt(n) {
+  const price = displayPrice(n);
+
+  return (
+    Number(price).toLocaleString("fi-FI", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 3,
+    }) + " snt/kWh"
+  );
+}
+const vatToggle = $("vatToggle");
+
+if (vatToggle) {
+  vatToggle.addEventListener("change", () => {
+    includeVat = vatToggle.checked;
+
+    const description = $("priceDescription");
+
+    if (description) {
+      description.textContent = includeVat
+        ? "Hinta sisältää ALV:n."
+        : "Hinta ilman ALV:tä.";
+    }
+
+    render();
+  });
+}
 
 function localDateISO(offset = 0) {
   const d = new Date();
@@ -36,33 +87,73 @@ function parseRows(rows) {
     }))
     .filter((x) => Number.isFinite(x.value));
 }
-async function fetchPrices(start, end) {
-  const url = `${API}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`;
+async function fetchPrices(date) {
+  const d = new Date(date);
+
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+
+  const url =
+    `https://www.sahkonhintatanaan.fi/api/v1/prices/${year}/${month}-${day}.json`;
+
   const res = await fetch(url);
-  if (!res.ok) throw new Error("Hintadatan haku epäonnistui");
+
+  if (!res.ok) {
+    throw new Error(`Hintadatan haku epäonnistui (${res.status})`);
+  }
+
   const json = await res.json();
-  return parseRows(json.prices || []);
+
+  return json
+    .map((x, i) => ({
+      value: Number(x.EUR_per_kWh) * 100,
+      date: new Date(x.time_start),
+      endDate: new Date(x.time_end),
+      hour: new Date(x.time_start).getHours(),
+      index: i,
+    }))
+    .filter((x) => Number.isFinite(x.value));
 }
 async function load() {
   document.body.classList.add("loading");
+
   try {
-    const today = localDateISO(0),
-      tomorrow = localDateISO(1),
-      dayAfter = localDateISO(2);
-    const [a, b] = await Promise.all([
-      fetchPrices(`${today}T00:00:00`, `${tomorrow}T00:00:00`),
-      fetchPrices(`${tomorrow}T00:00:00`, `${dayAfter}T00:00:00`),
-    ]);
-    state.today = a;
-    state.tomorrow = b;
+    const today = new Date();
+
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const [todayPrices, tomorrowPrices] =
+      await Promise.all([
+        fetchPrices(today),
+        fetchPrices(tomorrow),
+      ]);
+
+    state.today = todayPrices;
+    state.tomorrow = tomorrowPrices;
     state.lastUpdate = new Date();
+
     render();
   } catch (e) {
+    console.error(e);
+
     $("currentMeta").innerHTML =
       `<span class="error">${e.message}. Tarkista verkkoyhteys.</span>`;
   } finally {
     document.body.classList.remove("loading");
   }
+}
+const VAT_RATE = 0.255;
+
+let includeVat = true;
+
+function displayPrice(priceWithoutVat) {
+  if (includeVat) {
+    return priceWithoutVat * (1 + VAT_RATE);
+  }
+
+  return priceWithoutVat;
 }
 function render() {
   const data = state[state.activeDay] || [];
@@ -220,3 +311,151 @@ document.querySelectorAll(".tab").forEach((btn) =>
 );
 load();
 setInterval(load, 5 * 60 * 1000);
+/* =========================================
+   COOKIE CONSENT
+========================================= */
+
+(function () {
+
+  const overlay = document.getElementById("cookieOverlay");
+
+  const settingsToggle =
+    document.getElementById("cookieSettingsToggle");
+
+  const settings =
+    document.getElementById("cookieSettings");
+
+  const acceptButton =
+    document.getElementById("acceptCookies");
+
+  const rejectButton =
+    document.getElementById("rejectCookies");
+
+  const saveButton =
+    document.getElementById("saveCookieSettings");
+
+  const analytics =
+    document.getElementById("analyticsCookies");
+
+  const marketing =
+    document.getElementById("marketingCookies");
+
+
+  /*
+   * Tarkistetaan onko käyttäjä jo
+   * tehnyt evästevalinnan.
+   */
+
+  const savedConsent =
+  localStorage.getItem("sahkovahti_cookie_consent");
+
+if (Config.debug === true) {
+  // Debug-tilassa popup näytetään aina
+  overlay.style.display = "flex";
+} else if (savedConsent) {
+  // Normaalitilassa tallennettu valinta piilottaa popupin
+  overlay.style.display = "none";
+}
+
+
+  /*
+   * Avaa lisäasetukset
+   */
+
+  settingsToggle.addEventListener("click", function () {
+
+    settings.classList.toggle("show");
+
+  });
+
+
+  /*
+   * Tallenna käyttäjän valinta
+   */
+
+  function saveConsent(analyticsAllowed, marketingAllowed) {
+
+    const consent = {
+
+      necessary: true,
+
+      analytics: analyticsAllowed,
+
+      marketing: marketingAllowed,
+
+      timestamp: new Date().toISOString()
+
+    };
+
+
+    localStorage.setItem(
+      "sahkovahti_cookie_consent",
+      JSON.stringify(consent)
+    );
+
+
+    overlay.style.display = "none";
+
+
+    /*
+     * Täällä voidaan myöhemmin käynnistää
+     * Google Analytics, Meta Pixel jne.
+     */
+
+    if (analyticsAllowed) {
+
+      console.log(
+        "Sähkövahti: analytiikka sallittu"
+      );
+
+    }
+
+
+    if (marketingAllowed) {
+
+      console.log(
+        "Sähkövahti: markkinointi sallittu"
+      );
+
+    }
+
+  }
+
+
+  /*
+   * Hyväksy kaikki
+   */
+
+  acceptButton.addEventListener("click", function () {
+
+    saveConsent(true, true);
+
+  });
+
+
+  /*
+   * Vain välttämättömät
+   */
+
+  rejectButton.addEventListener("click", function () {
+
+    saveConsent(false, false);
+
+  });
+
+
+  /*
+   * Tallenna käyttäjän omat asetukset
+   */
+
+  saveButton.addEventListener("click", function () {
+
+    saveConsent(
+      analytics.checked,
+      marketing.checked
+    );
+
+  });
+
+
+})();
