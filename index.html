@@ -7,6 +7,114 @@
   <title>Sähkövahti — Suomen sähkön hinta</title>
   <link rel="stylesheet" href="style.css">
 </head>
+<link rel="icon" href="https://www.vattenfall.fi/Static/img/favicons/favicon.svg" sizes="32x32" />
+
+<!-- EVÄSTEPUPUP -->
+<div id="cookieOverlay" class="cookie-overlay">
+
+  <section class="cookie-popup"
+           role="dialog"
+           aria-modal="true"
+           aria-labelledby="cookieTitle">
+
+    <h2 id="cookieTitle">
+      Verkkosivustomme käyttää evästeitä
+    </h2>
+
+    <p>
+      Käytämme evästeitä ja muita vastaavia tekniikoita
+      varmistaaksemme verkkosivuston toimivuuden,
+      analysoidaksemme sivuston käyttöä sekä
+      kehittääksemme palveluamme. Voit hyväksyä kaikki
+      evästeet tai jatkaa vain välttämättömillä.
+    </p>
+
+    <button
+      type="button"
+      id="cookieSettingsToggle"
+      class="cookie-settings-link">
+      Lisätiedot ja asetukset
+    </button>
+
+    <!-- LISÄASETUKSET -->
+    <div id="cookieSettings" class="cookie-settings">
+
+      <h3>Evästeasetukset</h3>
+
+      <div class="cookie-setting">
+        <div>
+          <strong>Välttämättömät</strong>
+          <small>
+            Sivuston toiminnan kannalta välttämättömät
+            evästeet. Näitä ei voi poistaa käytöstä.
+          </small>
+        </div>
+
+        <label class="switch">
+          <input type="checkbox" checked disabled>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="cookie-setting">
+        <div>
+          <strong>Analytiikka</strong>
+          <small>
+            Auttaa meitä ymmärtämään, miten sivustoa käytetään.
+          </small>
+        </div>
+
+        <label class="switch">
+          <input type="checkbox" id="analyticsCookies">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="cookie-setting">
+        <div>
+          <strong>Markkinointi</strong>
+          <small>
+            Markkinointiin ja sisällön personointiin liittyvät
+            evästeet.
+          </small>
+        </div>
+
+        <label class="switch">
+          <input type="checkbox" id="marketingCookies">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <button
+        type="button"
+        id="saveCookieSettings"
+        class="cookie-save">
+        Tallenna valinnat
+      </button>
+
+    </div>
+
+    <div class="cookie-buttons">
+
+      <button
+        type="button"
+        id="rejectCookies"
+        class="cookie-btn cookie-essential">
+        Jatkan vain välttämättömillä
+      </button>
+
+      <button
+        type="button"
+        id="acceptCookies"
+        class="cookie-btn cookie-accept">
+        Hyväksyn kaikki
+      </button>
+
+    </div>
+
+  </section>
+</div>
+
 <body>
   <div class="app">
     <header class="topbar">
@@ -64,19 +172,39 @@
       </section>
 
       <section class="card">
-        <div class="section-head">
-          <div>
-            <h2>Tuntihinnat</h2>
-            <p class="muted">Hinta sisältää ALV:n. Data päivittyy rajapinnan mukaan.</p>
-          </div>
-          <div class="legend">
-            <span><i class="cheap"></i> Halpa</span>
-            <span><i class="normal"></i> Normaali</span>
-            <span><i class="expensive"></i> Kallis</span>
-          </div>
-        </div>
-        <div id="priceGrid" class="price-grid"></div>
-      </section>
+  <div class="section-head">
+    <div>
+      <h2>Tuntihinnat</h2>
+      <p id="priceDescription" class="muted">
+        Hinta sisältää ALV:n.
+      </p>
+    </div>
+
+    <div class="price-options">
+      <label class="vat-switch">
+        <span>Ilman ALV</span>
+
+        <input
+          type="checkbox"
+          id="vatToggle"
+          checked
+        >
+
+        <span class="switch-slider"></span>
+
+        <span>Sis. ALV</span>
+      </label>
+
+      <div class="legend">
+        <span><i class="cheap"></i> Halpa</span>
+        <span><i class="normal"></i> Normaali</span>
+        <span><i class="expensive"></i> Kallis</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="priceGrid" class="price-grid"></div>
+</section>
 
       <section class="bottom-grid">
         <article class="card calculator">
@@ -109,8 +237,9 @@
     </main>
 
     <footer>
+      
       <span>⚡ Sähkövahti</span>
-      <span>Hintayksikkö: snt/kWh · ALV mukana</span>
+      <span>Made with ❤️ by the Auramo</span>
     </footer>
   </div>
   <script src="script.js"></script>
